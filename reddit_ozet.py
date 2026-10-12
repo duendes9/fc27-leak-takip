@@ -24,7 +24,7 @@ import urllib.request
 from collections import Counter
 from datetime import datetime, timezone, timedelta
 
-from leak_takip import (ISTANBUL, UA, log, rss_coz, telegram_gonder, temizle)
+from leak_takip import (ISTANBUL, UA, cevir, log, rss_coz, telegram_gonder, temizle)
 
 SUBREDDIT = "fut"
 SAAT_PENCERESI = 24            # son kaç saatin gönderileri
@@ -239,7 +239,7 @@ def ozet_olustur(gonderiler, kaynak_turu):
             continue
         satirlar.append(f"\n<b>{basliklar[kat]}</b>")
         for g in grup:
-            baslik = g["baslik"]
+            baslik = cevir(g["baslik"]) or g["baslik"]
             if len(baslik) > 110:
                 baslik = baslik[:107].rstrip() + "…"
             istatistik = ""

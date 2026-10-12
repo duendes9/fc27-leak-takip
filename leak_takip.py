@@ -321,6 +321,78 @@ def durum_kaydet(goruldu, ilk_bitti):
 
 
 # ---------------------------------------------------------------------------
+# Türkçe çeviri (MyMemory ücretsiz çeviri API'si)
+# ---------------------------------------------------------------------------
+# Anahtar gerektirmez. Günlük ücretsiz sınır ~5.000 karakter; MYMEMORY_EMAIL
+# secret'ı eklenirse ~50.000 karaktere çıkar. Çeviri başarısız olursa
+# başlık İngilizce kalır, bildirim yine gider.
+
+CEVIRI_ACIK = os.environ.get("CEVIRI", "1") != "0"
+_ceviri_onbellek = {}
+_ceviri_kapandi = False  # günlük sınır dolarsa bu çalışmada tekrar deneme
+
+# Oyun terimleri: çeviri motoru bunları bozmasın diye önce korunur, sonra geri konur
+KORUNAN_TERIMLER = [
+    (r"\bfodder\b", "FODDERX", "fodder"),
+    (r"\bicons\b", "ICONSX", "ikonlar"),
+    (r"\bicon\b", "ICONX", "ikon"),
+    (r"\bheroes\b", "HEROESX", "hero'lar"),
+    (r"\bevos?\b", "EVOX", "evo"),
+    (r"\bsbcs?\b", "SBCX", "SBC"),
+    (r"\btotw\b", "TOTWX", "TOTW"),
+    (r"\bpromo\b", "PROMOX", "promo"),
+    (r"\bsniping\b", "SNIPINGX", "snipe"),
+    (r"\bflip(?:ping)?\b", "FLIPX", "flip"),
+    (r"\bmeta\b", "METAX", "meta"),
+    (r"\bfut\b", "FUTX", "FUT"),
+    (r"\bfutbin\b", "FUTBINX", "FUTBIN"),
+    (r"\bea fc\b", "EAFCX", "EA FC"),
+]
+
+
+def cevir(metin):
+    """İngilizce metni Türkçeye çevirir; olmazsa None döner."""
+    global _ceviri_kapandi
+    if not CEVIRI_ACIK or _ceviri_kapandi or not metin:
+        return None
+    if metin in _ceviri_onbellek:
+        return _ceviri_onbellek[metin]
+
+    korunmus = metin
+    for desen, yer_tutucu, _ in KORUNAN_TERIMLER:
+        korunmus = re.sub(desen, yer_tutucu, korunmus, flags=re.I)
+
+    parametreler = {"q": korunmus[:480], "langpair": "en|tr"}
+    eposta = os.environ.get("MYMEMORY_EMAIL", "").strip()
+    if eposta:
+        parametreler["de"] = eposta
+    url = "https://api.mymemory.translated.net/get?" + urllib.parse.urlencode(parametreler)
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": UA})
+        with urllib.request.urlopen(req, timeout=15) as r:
+            veri = json.load(r)
+    except Exception as e:
+        log(f"Çeviri yapılamadı: {e}")
+        return None
+
+    sonuc = (veri.get("responseData") or {}).get("translatedText") or ""
+    durum = str(veri.get("responseStatus", ""))
+    if durum != "200" or not sonuc or "MYMEMORY WARNING" in sonuc.upper():
+        if durum == "429" or "MYMEMORY WARNING" in sonuc.upper():
+            log("Çeviri günlük sınırı doldu; başlıklar İngilizce gönderilecek.")
+            _ceviri_kapandi = True
+        return None
+
+    sonuc = html.unescape(sonuc).strip()
+    for _, yer_tutucu, karsilik in KORUNAN_TERIMLER:
+        sonuc = re.sub(re.escape(yer_tutucu), karsilik, sonuc, flags=re.I)
+    if sonuc.lower() == metin.lower():
+        return None
+    _ceviri_onbellek[metin] = sonuc
+    return sonuc
+
+
+# ---------------------------------------------------------------------------
 # Telegram
 # ---------------------------------------------------------------------------
 
@@ -360,7 +432,12 @@ def telegram_gonder(metin):
 
 def mesaj_olustur(tur, baslik, link, kaynak_adi, tarih):
     simge = "🔴 <b>LEAK / SÖYLENTİ</b>" if tur == "leak" else "🟡 <b>FC 27 UT haberi</b>"
-    satirlar = [simge, "", f"<b>{html.escape(baslik)}</b>", f"Kaynak: {html.escape(kaynak_adi)}"]
+    turkce = cevir(baslik)
+    if turkce:
+        satirlar = [simge, "", f"<b>{html.escape(turkce)}</b>",
+                    f"<i>🇬🇧 {html.escape(baslik)}</i>", f"Kaynak: {html.escape(kaynak_adi)}"]
+    else:
+        satirlar = [simge, "", f"<b>{html.escape(baslik)}</b>", f"Kaynak: {html.escape(kaynak_adi)}"]
     if tarih:
         satirlar.append("Yayın: " + tarih.astimezone(ISTANBUL).strftime("%d.%m %H:%M") + " (İstanbul)")
     ipucu = ipucu_bul(baslik)

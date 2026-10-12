@@ -70,6 +70,16 @@ Bir leak düştüğünde bana (Claude'a) linki yapıştırırsan, PS fiyatların
 
 ---
 
+## Türkçe çeviri
+
+Haber ve Reddit başlıkları ücretsiz MyMemory çeviri servisiyle Türkçeye çevrilir. Leak bildirimlerinde Türkçe başlığın altında orijinal İngilizce başlık da durur (oyuncu adları ve terimler karışmasın diye). SBC, evo, fodder, TOTW gibi oyun terimleri çeviride korunur.
+
+- Ücretsiz sınır günde ~5.000 karakter; normal kullanımda yeter. Sınır dolarsa başlıklar o gün İngilizce gelir, bildirimler kesilmez.
+- Sınırı ~50.000'e çıkarmak istersen `MYMEMORY_EMAIL` adında bir secret ekleyip e-posta adresini yazabilir, iki `.yml` dosyasındaki `env:` kısmına `MYMEMORY_EMAIL: ${{ secrets.MYMEMORY_EMAIL }}` satırını ekleyebilirsin.
+- Çeviriyi kapatmak için aynı yere `CEVIRI: "0"` ekle.
+
+---
+
 ## r/fut gündem özeti
 
 `reddit_ozet.py` ve `.github/workflows/reddit-ozet.yml` her gün **12:00 ve 19:30**'da (İstanbul) r/fut'ta son 24 saatte en çok konuşulan gönderileri tek mesajda gönderir:
