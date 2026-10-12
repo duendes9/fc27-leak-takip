@@ -27,6 +27,7 @@ import os
 import re
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -53,20 +54,15 @@ KAYNAKLAR = [
      "url": "https://news.google.com/rss/search?q=%22FC+27%22+(leak+OR+leaked+OR+SBC+OR+promo)+when:2d&hl=en-US&gl=US&ceid=US:en"},
     {"ad": "Google News", "tur": "rss", "genel": True,
      "url": "https://news.google.com/rss/search?q=%22EA+FC+27%22+Ultimate+Team+when:2d&hl=en-US&gl=US&ceid=US:en"},
-    {"ad": "Reddit r/EASportsFC", "tur": "rss", "genel": True,
-     "url": "https://www.reddit.com/r/EASportsFC/new/.rss"},
-    {"ad": "Reddit r/fut", "tur": "rss", "genel": True,
-     "url": "https://www.reddit.com/r/fut/new/.rss"},
+    # İki subreddit tek istekte (ayrı istekler Reddit'in 429 sınırına takılıyor)
+    {"ad": "Reddit", "tur": "rss", "genel": True,
+     "url": "https://www.reddit.com/r/EASportsFC+fut/new/.rss?limit=50"},
     {"ad": "FIFA UTeam", "tur": "rss", "genel": False,
      "url": "https://fifauteam.com/feed/"},
     {"ad": "Dexerto", "tur": "rss", "genel": True,
      "url": "https://www.dexerto.com/ea-sports-fc/feed/"},
     {"ad": "Football Gaming Zone", "tur": "rss", "genel": True,
      "url": "https://footballgamingzone.com/feed/"},
-    {"ad": "FUTBIN", "tur": "sayfa", "genel": False,
-     "url": "https://www.futbin.com/news",
-     "link_regex": r'href="(/news/articles/\d+/[^"#?]+)"',
-     "taban": "https://www.futbin.com"},
     {"ad": "FUT.GG", "tur": "sayfa", "genel": False,
      "url": "https://www.fut.gg/news/",
      "link_regex": r'href="((?:https://www\.fut\.gg)?/news/[a-z0-9][a-z0-9-]+/)"',
@@ -129,6 +125,16 @@ def log(msg):
 
 
 def indir(url, zaman_asimi=20):
+    try:
+        return _indir(url, zaman_asimi)
+    except urllib.error.HTTPError as e:
+        if e.code != 429:
+            raise
+        time.sleep(8)  # "çok fazla istek": biraz bekleyip bir kez daha dene
+        return _indir(url, zaman_asimi)
+
+
+def _indir(url, zaman_asimi=20):
     req = urllib.request.Request(url, headers={
         "User-Agent": UA,
         "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, text/html;q=0.9, */*;q=0.8",
