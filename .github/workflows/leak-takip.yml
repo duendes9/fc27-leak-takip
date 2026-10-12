@@ -1,0 +1,42 @@
+name: FC 27 Leak Takip
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: leak-takip
+  cancel-in-progress: false
+
+jobs:
+  kontrol:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Görülen haberleri yükle
+        uses: actions/cache/restore@v4
+        with:
+          path: goruldu.json
+          key: goruldu-${{ github.run_id }}
+          restore-keys: goruldu-
+
+      - name: Leak ve haberleri kontrol et
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python leak_takip.py
+
+      - name: Görülen haberleri kaydet
+        if: always()
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: goruldu.json
+          key: goruldu-${{ github.run_id }}
