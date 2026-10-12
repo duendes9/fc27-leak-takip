@@ -2,7 +2,7 @@
 
 Bu sistem 10 dakikada bir FC 27 Ultimate Team leak ve haberlerini tarar, yeni bir şey çıkınca Telegram'dan mesaj atar. Ücretsizdir ve bilgisayarının açık olması gerekmez: GitHub'ın sunucularında çalışır.
 
-Sadece herkese açık haber sitelerini okur (Google News, Reddit, FUTBIN, FUT.GG, Dexerto, FIFA UTeam, Football Gaming Zone). EA hesabına, web app'e veya companion app'e **hiç bağlanmaz**, bu yüzden ban riski yoktur.
+Sadece herkese açık haber sitelerini okur (Google News, Reddit, FUT.GG, Dexerto, FIFA UTeam, Football Gaming Zone). EA hesabına, web app'e veya companion app'e **hiç bağlanmaz**, bu yüzden ban riski yoktur.
 
 Toplam kurulum süresi: ~15 dakika.
 
@@ -67,6 +67,19 @@ Bundan sonra kendiliğinden her 10 dakikada bir çalışır. İlk çalışmada m
 - 💡 Konuya göre kısa bir ipucu (ör. SBC haberi → fodder fiyatları artabilir).
 
 Bir leak düştüğünde bana (Claude'a) linki yapıştırırsan, PS fiyatlarına bakıp somut bir al-sat planı çıkarabilirim.
+
+---
+
+## r/fut gündem özeti
+
+`reddit_ozet.py` ve `.github/workflows/reddit-ozet.yml` her gün **12:00 ve 19:30**'da (İstanbul) r/fut'ta son 24 saatte en çok konuşulan gönderileri tek mesajda gönderir:
+
+- Pack luck, mizah, "takımımı puanla" gibi gürültüyü eler.
+- Gönderileri beğeni + yorum sayısına göre sıralar (yorumlar daha ağır basar, yeni gönderilere küçük bonus).
+- Konularına göre gruplar: 🔴 Leak & Haber, 💰 Piyasa & Trading, 🧩 SBC & Evolution, ⭐ Promo & Kartlar, ⚙️ Oyun, Meta & Sorunlar.
+- Başlıklarda en çok geçen oyuncu isimlerini ve piyasa sohbetlerinin yönünü (düşüş/yükseliş) gösterir.
+
+Elle denemek için: **Actions → r/fut Gündem Özeti → Run workflow**. Saatleri değiştirmek için `reddit-ozet.yml` içindeki cron satırlarını düzenle (saatler UTC, İstanbul = UTC+3).
 
 ---
 
